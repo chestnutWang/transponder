@@ -1,0 +1,128 @@
+syntax="proto2";
+
+option cc_generic_services = true;
+option java_package="com.kuhan.transponder.service.standard";
+option java_outer_classname="Common";
+
+enum  StatusCode {
+  // 执行成功
+  kOK = 0;
+
+  //RM模块错误码从2000开始
+
+  // stream已存在
+  kStreamExists = 2001;
+  // stream不存在
+  kStreamNotExists = 2002;
+  // 传入参数错误
+  kParaError = 2003;
+  // segment未分配
+  kSegmentNotAllocated = 2004;
+  // segment分配失败
+  kSegmentAllocateError = 2005;
+  // 功能不支持
+  kNotSupported = 2006;
+  // owner认证失败
+  kOwnerAuthFail = 2007;
+  // Id input parameter duplicated. 
+  kIdInfoDuplicate = 2008;
+  // Name input parameter duplicated;
+  kNameInfoDuplicate = 2009;
+  // Cannot find related element
+  kElementNotFound = 2010;
+  // Lack parameter
+  kLackOfPara = 2011;
+
+
+  // 元数据存储错误
+  kMetaKVStorageError = 3001;
+  // 内部错误
+  KInternalError = 3002;
+ 
+
+  //ChunkServer模块错误码从5000开始
+  //// internal exception
+  kCsUnknownException = 5001;
+  //// not enough space 
+  kCsNotEnoughSpaceException = 5002;
+  //// copyset member is existing
+  kCsCopysetMemberExistingException = 5003;
+  //// disk not found 
+  kCsNoDiskException = 5004;
+  //// chunk server service has been shutdown
+  kCsServiceHavingBeenShutdown = 5005;
+  //// copyset member being deleted 
+  kCsCopysetBeingDeletedException = 5006;
+  //// copyset member not found
+  kCsCopysetMemberNotFound = 5007;
+
+  // heartbeat相关错误码
+  // chunkserver未初始化完成
+  hbChunkServerUnInitialized = 6000;
+  // chunkserver处于异常状态,比如某个io线程hung住等
+  hbChunkserverAbnormal = 6001;
+  // 无copyset上报
+  hbChunkServerNoCopyset = 6002;
+}
+
+message ServerId {
+  optional uint32 id = 1;
+}
+
+message CopysetId {
+  optional uint64 id = 1;
+}
+
+message SegmentId {
+  optional uint64 id = 1;
+};
+
+message ContainerId {
+  optional uint64 id = 1;
+}
+
+message LogicalPoolId {
+  optional uint32 id = 1;
+}
+
+message Endpoint {
+  optional string serve_ip = 1;
+  optional uint32 serve_port = 2;
+}
+
+message ResultCode {
+  optional StatusCode retcode = 1 [default = kOK];
+  optional string errmsg = 2 [default = ""];
+}
+
+// if membership changes, epoch will increament
+message RouteInfo {
+  optional uint64 epoch = 1;
+}
+
+message CopysetMemberInfo {
+  enum Mode {
+    REPLICATION = 1;
+  }
+  enum MemberRole {
+    LEADER = 1;
+    FOLLOWER = 2;
+  }
+  enum CopysetState {
+    kOk = 0;
+  }
+
+  message Member {
+    optional ContainerId container = 1;
+    optional Endpoint endpoint = 2;
+
+    // todo:
+    optional MemberRole role = 3;
+  }
+  optional Mode mode = 1;
+  optional RouteInfo route = 2;
+  // todo:
+  optional CopysetState state = 3;
+  repeated Member members = 4;
+}
+

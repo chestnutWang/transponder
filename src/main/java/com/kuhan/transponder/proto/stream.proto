@@ -1,0 +1,107 @@
+syntax="proto2";
+
+import "com/kuhan/transponder/proto/common.proto";
+
+package lse.resourcemgr;
+option java_package="com.kuhan.transponder.service.standard";
+option cc_generic_services = true;
+option java_outer_classname="Stream";
+
+enum StreamType {
+  REPLICATION = 0; // 副本类型stream
+}
+
+message StreamPublicInfo {
+  optional StreamId stream = 1;
+  optional string name = 2;
+  optional StreamType type = 3;
+  optional string owner = 4;
+  optional uint32 segment_size = 5;
+  optional uint64 capacity = 6;
+}
+
+message StreamId {
+  optional uint32 cluster_id = 1;
+  optional uint32 shard_id = 2;
+  optional uint64 id = 3;
+}
+
+message CopysetInfo {
+  optional CopysetId copyset = 1;
+  repeated CopysetMemberInfo members = 2;
+}
+
+message SegmentId {
+  optional uint64 id = 1;
+}
+
+message SegmentPublicInfo {
+  optional SegmentId segment = 1;
+  optional LogicalPoolId logical_pool = 2;
+  optional uint32 segment_size = 3;
+  optional uint64 offset_in_stream = 4;
+  optional CopysetInfo copyset_info = 5;
+}
+
+
+// ----------------------------------------------------------------------------------------------------
+// Protocols
+// ----------------------------------------------------------------------------------------------------
+
+message CreateStreamRequest {
+  optional string name = 1;
+  optional StreamType type = 2;
+  optional uint64 capacity = 3;
+}
+
+message CreateStreamResponse {
+  optional ResultCode rc = 1;
+  optional StreamId stream = 2;
+}
+
+message OpenStreamRequest {
+  optional StreamId stream = 1; 
+}
+
+message OpenStreamResponse {
+  optional ResultCode rc = 1;
+  optional StreamPublicInfo stream_info = 2;
+  // sorted by `offset_in_stream`
+  repeated SegmentPublicInfo segment_info = 3;
+}
+
+message AllocateSegmentRequest {
+  optional StreamId stream = 1;
+  optional uint64  offset_in_stream = 2;
+  optional uint64 count = 3;
+}
+
+message AllocateSegmentResponse {
+  optional ResultCode rc = 1;
+  repeated SegmentPublicInfo segment_info = 2;
+}
+
+message DeleteStreamRequest {
+  optional StreamId stream = 1;
+}
+
+message DeleteStreamResponse {
+  optional ResultCode rc = 1;
+}
+
+message ExtendStreamRequest {
+  optional StreamId stream = 1;
+  optional uint64 capacity = 2;
+}
+
+message ExtendStreamResponse {
+  optional ResultCode rc = 1;
+}
+
+service StreamService {
+  rpc OpenStream(OpenStreamRequest) returns (OpenStreamResponse);
+  rpc CreateStream(CreateStreamRequest) returns (CreateStreamResponse);
+  rpc DeleteStream(DeleteStreamRequest) returns (DeleteStreamResponse);
+  rpc AllocateSegment(AllocateSegmentRequest) returns (AllocateSegmentResponse);
+  rpc ExtendStream(ExtendStreamRequest) returns (ExtendStreamResponse);
+}
